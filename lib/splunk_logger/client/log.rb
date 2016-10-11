@@ -49,9 +49,16 @@ module SplunkLogger
         if delayed?
           @message_queue << {severity: level, message: message}
           @message_queue.shift if @message_queue.length > @max_queue_size + @max_batch_size
+          trigger_send_log if @message_queue.length >= @max_batch_size && @current_message_size == 0
           return true
         else
           send_log_now({severity: level, message: message})
+        end
+      end
+
+      def trigger_send_log
+        Thread.new do
+          send_log
         end
       end
     end
