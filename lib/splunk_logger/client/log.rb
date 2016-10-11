@@ -57,8 +57,11 @@ module SplunkLogger
       end
 
       def trigger_send_log
+        return if @semaphore.locked?
         Thread.new do
-          send_log
+          @semaphore.synchronize do
+            send_log
+          end
         end
       end
     end

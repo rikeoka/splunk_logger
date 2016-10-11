@@ -37,7 +37,9 @@ module SplunkLogger
       @timer = Thread.new do
         while true do
           sleep @send_interval
-          send_log
+          @semaphore.synchronize do
+            send_log
+          end
         end
       end
     end
@@ -55,14 +57,10 @@ module SplunkLogger
     protected
 
     def send_log
-      @semaphore.synchronize do
-        return if @message_queue.empty? || @current_message_size > 0
-      end
+      return if @message_queue.empty? || @current_message_size > 0
 
       until(@message_queue.empty?) do
-        @semaphore.synchronize do
-          @current_message_size = [@message_queue.length, @max_batch_size].min
-        end
+        @current_message_size = [@message_queue.length, @max_batch_size].min
         messages = { "event": @message_queue.slice(0, @current_message_size) }
         body = messages[:event].map { |m| "#{{event: m}.to_json}" }.join("\n")
 
