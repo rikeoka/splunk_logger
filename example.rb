@@ -15,7 +15,7 @@ splunk_client = SplunkLogger::Client.new(
 end
 
 until splunk_client.message_queue.empty?
-  sleep 1
+  sleep 5
 end
 
 puts 'Check your splunk instance and it should have 1000 hello world entries.'

@@ -26,6 +26,7 @@ module SplunkLogger
         faraday.adapter  Faraday.default_adapter
       end
       @conn.ssl.verify = verify_ssl
+      @semaphore = Mutex.new
       start
     end
 
@@ -36,7 +37,9 @@ module SplunkLogger
       @timer = Thread.new do
         while true do
           sleep @send_interval
-          send_log
+          @semaphore.synchronize do
+            send_log
+          end
         end
       end
     end
@@ -56,11 +59,10 @@ module SplunkLogger
     def send_log
       return if @message_queue.empty? || @current_message_size > 0
 
-      while(!@message_queue.empty?) do
+      until(@message_queue.empty?) do
         @current_message_size = [@message_queue.length, @max_batch_size].min
         messages = { "event": @message_queue.slice(0, @current_message_size) }
         body = messages[:event].map { |m| "#{{event: m}.to_json}" }.join("\n")
-
 
         begin
           response = @conn.post SplunkLogger::Client::COLLECTOR_PATH, body
