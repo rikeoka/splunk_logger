@@ -23,7 +23,6 @@ module SplunkLogger
       @conn = Faraday.new(url: url, headers: headers) do |faraday|
         faraday.request :json
         faraday.response :json, content_type: 'application/json'
-        faraday.response :logger
         faraday.adapter  Faraday.default_adapter
       end
       @conn.ssl.verify = verify_ssl

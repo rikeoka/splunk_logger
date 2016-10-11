@@ -1,7 +1,7 @@
 require 'splunk_logger'
 
 splunk_client = SplunkLogger::Client.new(
-    token: 'Your Splunk Token',
+    token: ENV['SPLUNK_TOKEN'] || 'Your Splunk Token',
     url: 'https://localhost:8088',
     verify_ssl: false,
     default_level: 'info',
