@@ -13,7 +13,7 @@ module SplunkLogger
       token = options[:token]
       url = options[:url]
       verify_ssl = options[:verify_ssl].nil? ? true : options[:verify_ssl]
-      @default_level = options[:default_level].to_s || 'info'
+      @default_level = options[:default_level] || 'info'
       @send_interval = options[:send_interval].to_i
       @max_batch_size = (options[:max_batch_size] || 100).to_i
       @max_queue_size = (options[:max_queue_size] || 10000).to_i
