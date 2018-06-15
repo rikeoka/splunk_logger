@@ -4,55 +4,23 @@ module SplunkLogger
     # Methods to log events to Splunk
     module Log
 
-      # Log event with default level
-      #
-      # Example:
-      #   SplunkLogger.log("hello world")
-      def log(message)
-        queue_or_send_message(@default_level, message)
-      end
-
-      # Log event as debug
-      #
-      # Example:
-      #   SplunkLogger.debug("hello world")
-      def debug(message)
-        queue_or_send_message('debug', message)
-      end
-
-      # Log event as info
-      #
-      # Example:
-      #   SplunkLogger.info("hello world")
-      def info(message)
-        queue_or_send_message('info', message)
-      end
-
-      # Log event as warning
-      #
-      # Example:
-      #   SplunkLogger.warn("hello world")
-      def warn(message)
-        queue_or_send_message('warn', message)
-      end
-
-      # Log event as error
-      #
-      # Example:
-      #   SplunkLogger.error("hello world")
-      def error(message)
-        queue_or_send_message('error', message)
+      %w(log debug info warn error).each do |level|
+        define_method level.to_s.to_sym do |log_data|
+          level = (level == 'log' ? @default_level : level)
+          queue_or_send_message(level, log_data)
+        end
       end
 
       private
-      def queue_or_send_message(level, message)
+      def queue_or_send_message(level, log_data)
+        formatted_data = log_hash(level, log_data)
         if delayed?
-          @message_queue << {severity: level, message: message}
+          @message_queue << formatted_data
           @message_queue.shift if @message_queue.length > @max_queue_size + @max_batch_size
           trigger_send_log if @message_queue.length >= @max_batch_size && @current_message_size == 0
           return true
         else
-          send_log_now({severity: level, message: message})
+          send_log_now(formatted_data)
         end
       end
 
@@ -63,6 +31,11 @@ module SplunkLogger
             send_log
           end
         end
+      end
+
+      def log_hash(level, log_data)
+        log_data = { message: log_data } unless log_data.is_a?(Hash)
+        { severity: level }.merge!(log_data)
       end
     end
   end
