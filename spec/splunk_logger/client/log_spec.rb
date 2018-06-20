@@ -85,4 +85,25 @@ describe SplunkLogger::Client do
       expect(Thread.list.length).to eq(thread_count)
     end
   end
+
+  describe ".log_hash" do
+    before do
+      allow(@logger).to receive(:delayed?).and_return(true)
+      allow(@logger).to receive(:trigger_send_log)
+    end
+
+    context 'non hash message' do
+      it 'should return a valid formatted hash' do
+        @logger.info('test')
+        expect(@logger.message_queue).to eq([{severity: 'info', message: 'test'}])
+      end
+    end
+
+    context 'hash message' do
+      it 'should return a valid hash with all input hash params' do
+        @logger.info({ message: 'test', extra_params: 'test param'})
+        expect(@logger.message_queue).to eq([{severity: 'info', message: 'test', extra_params: 'test param'}])
+      end
+    end
+  end
 end
